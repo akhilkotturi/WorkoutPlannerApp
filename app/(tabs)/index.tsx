@@ -1,98 +1,193 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
+import { Alert, FlatList, Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import WorkoutPlanDisplay from "@/components/WorkoutPlanDisplay";
+import { Colors } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { WorkoutPlan } from "@/lib/gemini";
+import { supabase } from "@/lib/supabase";
 
-export default function HomeScreen() {
+type WorkoutRow = {
+  id: string;
+  title: string;
+  created_at: string;
+  plan_data: WorkoutPlan;
+};
+
+export default function HomeTab() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? "light"];
+  const mutedText = theme.icon;
+  const cardBackground = colorScheme === "dark" ? "#1f2123" : "#f6f8fa";
+
+  const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedWorkout, setSelectedWorkout] = useState<WorkoutRow | null>(null);
+
+  const loadWorkouts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setWorkouts([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('workouts')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setWorkouts(data || []);
+    } catch (error: any) {
+      console.error('Error loading workouts:', error);
+      Alert.alert('Error', 'Failed to load workouts');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadWorkouts();
+    }, [loadWorkouts])
+  );
+
+  const handleDeleteWorkout = async (id: string) => {
+    // Web-compatible confirmation
+    const confirmDelete = Platform.OS === 'web' 
+      ? window.confirm('Are you sure you want to delete this workout plan?')
+      : await new Promise((resolve) => {
+          Alert.alert(
+            'Delete Workout',
+            'Are you sure you want to delete this workout plan?',
+            [
+              { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+              { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
+            ]
+          );
+        });
+
+    if (!confirmDelete) return;
+
+    try {
+      console.log('Deleting workout with id:', id);
+      const { error } = await supabase.from('workouts').delete().eq('id', id);
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
+      console.log('Workout deleted successfully');
+      setSelectedWorkout(null); // Close modal after deletion
+      await loadWorkouts();
+    } catch (error: any) {
+      console.error('Delete failed:', error);
+      const message = error?.message || 'Failed to delete workout';
+      if (Platform.OS === 'web') {
+        window.alert('Error: ' + message);
+      } else {
+        Alert.alert('Error', message);
+      }
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.text }]}>Your Workouts</Text>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      {loading ? (
+        <Text style={[styles.sub, { color: mutedText }]}>Loading...</Text>
+      ) : workouts.length === 0 ? (
+        <View
+          style={[
+            styles.empty,
+            { borderColor: mutedText, backgroundColor: cardBackground },
+          ]}
+        >
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>No workouts yet</Text>
+          <Text style={[styles.emptySub, { color: mutedText }]}>Go to Create to generate your first one.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={workouts}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={{ gap: 12, paddingTop: 12, paddingBottom: 20 }}
+          renderItem={({ item }) => (
+            <Pressable
+              style={[
+                styles.card,
+                { borderColor: mutedText, backgroundColor: cardBackground },
+              ]}
+              onPress={() => setSelectedWorkout(item)}
+              onLongPress={() => handleDeleteWorkout(item.id)}
+            >
+              <Text style={[styles.cardTitle, { color: theme.text }]}>{item.title}</Text>
+              <Text style={[styles.cardSub, { color: mutedText }]}>
+                {new Date(item.created_at).toLocaleDateString()}
+              </Text>
+            </Pressable>
+          )}
+        />
+      )}
+
+      <Modal
+        visible={!!selectedWorkout}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setSelectedWorkout(null)}
+      >
+        <View style={[styles.modalContainer, { backgroundColor: theme.background }]}>
+          <View style={[styles.modalHeader, { borderBottomColor: mutedText }]}>
+            <TouchableOpacity onPress={() => setSelectedWorkout(null)}>
+              <Text style={[styles.closeButton, { color: theme.tint }]}>Close</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                if (selectedWorkout) {
+                  handleDeleteWorkout(selectedWorkout.id);
+                  // Modal will close automatically after deletion confirmation
+                }
+              }}
+            >
+              <Text style={[styles.deleteButton, { color: "#ff3b30" }]}>Delete</Text>
+            </TouchableOpacity>
+          </View>
+          {selectedWorkout && <WorkoutPlanDisplay plan={selectedWorkout.plan_data} />}
+        </View>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: { flex: 1, padding: 18 },
+  title: { fontSize: 28, fontWeight: "800" },
+  sub: { marginTop: 10 },
+  empty: { marginTop: 24, padding: 16, borderWidth: 1, borderRadius: 12 },
+  emptyTitle: { fontSize: 18, fontWeight: "700" },
+  emptySub: { marginTop: 6 },
+  card: { padding: 14, borderWidth: 1, borderRadius: 14 },
+  cardTitle: { fontSize: 16, fontWeight: "700" },
+  cardSub: { marginTop: 6 },
+  modalContainer: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 18,
+    borderBottomWidth: 1,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  closeButton: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  deleteButton: {
+    fontSize: 17,
+    fontWeight: "600",
   },
 });
