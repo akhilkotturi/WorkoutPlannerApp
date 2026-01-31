@@ -71,10 +71,6 @@ export default function WorkoutSurvey({ onComplete, loading }: WorkoutSurveyProp
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[styles.title, { color: theme.text }]}>Workout Survey</Text>
-      <Text style={[styles.subtitle, { color: muted }]}>
-        Answer these questions to get a personalized workout plan
-      </Text>
 
       {QUESTIONS.map((q, index) => (
         <View key={q.id} style={[styles.questionCard, { backgroundColor: cardBg, borderColor: muted }]}>

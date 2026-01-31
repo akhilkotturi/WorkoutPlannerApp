@@ -1,6 +1,7 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { Alert, FlatList, Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import WorkoutPlanDisplay from "@/components/WorkoutPlanDisplay";
 import { Colors } from "@/constants/theme";
@@ -20,6 +21,7 @@ export default function HomeTab() {
   const theme = Colors[colorScheme ?? "light"];
   const mutedText = theme.icon;
   const cardBackground = colorScheme === "dark" ? "#1f2123" : "#f6f8fa";
+  const insets = useSafeAreaInsets();
 
   const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,9 +97,7 @@ export default function HomeTab() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <Text style={[styles.title, { color: theme.text }]}>Your Workouts</Text>
-
+    <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top }]}>
       {loading ? (
         <Text style={[styles.sub, { color: mutedText }]}>Loading...</Text>
       ) : workouts.length === 0 ? (

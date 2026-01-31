@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
@@ -11,8 +12,14 @@ export default function ProfileTab() {
   const muted = theme.icon;
   const cardBg = colorScheme === "dark" ? "#1f2123" : "#f6f8fa";
   const logoutTextColor = colorScheme === "dark" ? theme.background : "#fff";
+  const insets = useSafeAreaInsets();
 
   const [name, setName] = useState<string>("");
+  const [gender, setGender] = useState<string>("");
+  const [height, setHeight] = useState<string>("");
+  const [weight, setWeight] = useState<string>("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -21,54 +28,209 @@ export default function ProfileTab() {
 
       const { data } = await supabase
         .from("profiles")
-        .select("full_name")
+        .select("full_name, gender, height, weight")
         .eq("id", session.user.id)
         .maybeSingle();
 
       setName(data?.full_name ?? "");
+      setGender(data?.gender ?? "");
+      setHeight(data?.height?.toString() ?? "");
+      setWeight(data?.weight?.toString() ?? "");
     };
 
     load();
   }, []);
 
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          gender: gender || null,
+          height: height ? parseFloat(height) : null,
+          weight: weight ? parseFloat(weight) : null,
+        })
+        .eq("id", session.user.id);
+
+      if (error) throw error;
+
+      setIsEditing(false);
+      Alert.alert("Success", "Profile updated successfully");
+    } catch (e: any) {
+      Alert.alert("Error", e?.message ?? "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <Text style={[styles.title, { color: theme.text }]}>Profile</Text>
+    <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + 20 }]}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: theme.text }]}>Profile</Text>
+          <Pressable
+            onPress={() => {
+              if (isEditing) {
+                handleSave();
+              } else {
+                setIsEditing(true);
+              }
+            }}
+            disabled={saving}
+            style={({ pressed }) => [
+              styles.editButton,
+              {
+                backgroundColor: isEditing ? theme.tint : "transparent",
+                borderColor: theme.tint,
+                opacity: pressed ? 0.7 : 1,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.editButtonText,
+                { color: isEditing ? (colorScheme === "dark" ? "#000" : "#fff") : theme.tint },
+              ]}
+            >
+              {saving ? "Saving..." : isEditing ? "Save" : "Edit"}
+            </Text>
+          </Pressable>
+        </View>
 
-      <View
-        style={[
-          styles.card,
-          { borderColor: muted, backgroundColor: cardBg },
-        ]}
-      >
-        <Text style={[styles.label, { color: muted }]}>Name</Text>
-        <Text style={[styles.value, { color: theme.text }]}>{name || "—"}</Text>
-      </View>
+        <View
+          style={[
+            styles.card,
+            { borderColor: muted, backgroundColor: cardBg },
+          ]}
+        >
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: muted }]}>Name</Text>
+            <Text style={[styles.value, { color: theme.text }]}>{name || "—"}</Text>
+          </View>
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => supabase.auth.signOut()}
-        style={({ pressed }) => [
-          styles.logout,
-          {
-            backgroundColor: theme.tint,
-            borderColor: theme.tint,
-            opacity: pressed ? 0.85 : 1,
-          },
-        ]}
-      >
-        <Text style={[styles.logoutText, { color: logoutTextColor }]}>Log out</Text>
-      </Pressable>
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: muted }]}>Gender</Text>
+            {isEditing ? (
+              <TextInput
+                value={gender}
+                onChangeText={setGender}
+                placeholder="e.g., Male, Female, Other"
+                placeholderTextColor={muted}
+                style={[styles.input, { color: theme.text, borderColor: muted }]}
+              />
+            ) : (
+              <Text style={[styles.value, { color: theme.text }]}>{gender || "—"}</Text>
+            )}
+          </View>
+
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: muted }]}>Height (cm)</Text>
+            {isEditing ? (
+              <TextInput
+                value={height}
+                onChangeText={setHeight}
+                placeholder="e.g., 175"
+                placeholderTextColor={muted}
+                keyboardType="numeric"
+                style={[styles.input, { color: theme.text, borderColor: muted }]}
+              />
+            ) : (
+              <Text style={[styles.value, { color: theme.text }]}>{height ? `${height} cm` : "—"}</Text>
+            )}
+          </View>
+
+          <View style={styles.field}>
+            <Text style={[styles.label, { color: muted }]}>Weight (kg)</Text>
+            {isEditing ? (
+              <TextInput
+                value={weight}
+                onChangeText={setWeight}
+                placeholder="e.g., 70"
+                placeholderTextColor={muted}
+                keyboardType="numeric"
+                style={[styles.input, { color: theme.text, borderColor: muted }]}
+              />
+            ) : (
+              <Text style={[styles.value, { color: theme.text }]}>{weight ? `${weight} kg` : "—"}</Text>
+            )}
+          </View>
+        </View>
+
+        {isEditing && (
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setIsEditing(false)}
+            style={({ pressed }) => [
+              styles.cancelButton,
+              {
+                borderColor: muted,
+                opacity: pressed ? 0.7 : 1,
+              },
+            ]}
+          >
+            <Text style={[styles.cancelButtonText, { color: theme.text }]}>Cancel</Text>
+          </Pressable>
+        )}
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => supabase.auth.signOut()}
+          style={({ pressed }) => [
+            styles.logout,
+            {
+              backgroundColor: theme.tint,
+              borderColor: theme.tint,
+              opacity: pressed ? 0.85 : 1,
+            },
+          ]}
+        >
+          <Text style={[styles.logoutText, { color: logoutTextColor }]}>Log out</Text>
+        </Pressable>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 18, gap: 14 },
+  container: { flex: 1, padding: 18 },
+  scrollContent: { paddingBottom: 40, gap: 14 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4 },
   title: { fontSize: 28, fontWeight: "800" },
-  card: { borderWidth: 1, borderRadius: 12, padding: 14 },
-  label: { fontWeight: "700" },
-  value: { marginTop: 6, fontSize: 18, fontWeight: "700" },
+  editButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  editButtonText: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  card: { borderWidth: 1, borderRadius: 12, padding: 14, gap: 16 },
+  field: { gap: 6 },
+  label: { fontWeight: "700", fontSize: 14 },
+  value: { fontSize: 18, fontWeight: "700" },
+  input: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
   logout: {
     marginTop: 8,
     borderRadius: 12,

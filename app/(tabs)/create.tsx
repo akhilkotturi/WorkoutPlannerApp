@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 import WorkoutPlanDisplay from "@/components/WorkoutPlanDisplay";
 import WorkoutSurvey, { SurveyAnswers } from "@/components/WorkoutSurvey";
@@ -41,7 +41,7 @@ export default function CreateTab() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       {!workoutPlan ? (
         <WorkoutSurvey onComplete={handleSurveyComplete} loading={loading} />
       ) : (
@@ -55,7 +55,7 @@ export default function CreateTab() {
           <WorkoutPlanDisplay plan={workoutPlan} />
         </View>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
