@@ -140,7 +140,7 @@ Include ${answers.daysPerWeek} workout days. Make exercises specific to the equi
     }
 
     const plan = JSON.parse(jsonText);
-    console.log('✅ Successfully generated workout plan with Groq');
+    console.log('Successfully generated workout plan');
     return plan;
     
   } catch (error: any) {

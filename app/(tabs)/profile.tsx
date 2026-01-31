@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { useEffect, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Colors } from "@/constants/theme";
@@ -16,10 +16,15 @@ export default function ProfileTab() {
 
   const [name, setName] = useState<string>("");
   const [gender, setGender] = useState<string>("");
-  const [height, setHeight] = useState<string>("");
-  const [weight, setWeight] = useState<string>("");
+  const [height, setHeight] = useState<number>(170);
+  const [weight, setWeight] = useState<number>(70);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const incrementHeight = () => setHeight(prev => Math.min(250, prev + 1));
+  const decrementHeight = () => setHeight(prev => Math.max(100, prev - 1));
+  const incrementWeight = () => setWeight(prev => Math.min(300, prev + 0.5));
+  const decrementWeight = () => setWeight(prev => Math.max(30, prev - 0.5));
 
   useEffect(() => {
     const load = async () => {
@@ -34,8 +39,8 @@ export default function ProfileTab() {
 
       setName(data?.full_name ?? "");
       setGender(data?.gender ?? "");
-      setHeight(data?.height?.toString() ?? "");
-      setWeight(data?.weight?.toString() ?? "");
+      setHeight(data?.height ?? 170);
+      setWeight(data?.weight ?? 70);
     };
 
     load();
@@ -51,8 +56,8 @@ export default function ProfileTab() {
         .from("profiles")
         .update({
           gender: gender || null,
-          height: height ? parseFloat(height) : null,
-          weight: weight ? parseFloat(weight) : null,
+          height: height,
+          weight: weight,
         })
         .eq("id", session.user.id);
 
@@ -130,14 +135,33 @@ export default function ProfileTab() {
           <View style={styles.field}>
             <Text style={[styles.label, { color: muted }]}>Height (cm)</Text>
             {isEditing ? (
-              <TextInput
-                value={height}
-                onChangeText={setHeight}
-                placeholder="e.g., 175"
-                placeholderTextColor={muted}
-                keyboardType="numeric"
-                style={[styles.input, { color: theme.text, borderColor: muted }]}
-              />
+              <View style={styles.inputWithStepperContainer}>
+                <TextInput
+                  value={height.toString()}
+                  onChangeText={(val) => {
+                    const num = parseFloat(val) || 0;
+                    if (num >= 100 && num <= 250) setHeight(num);
+                  }}
+                  placeholder="e.g., 175"
+                  placeholderTextColor={muted}
+                  keyboardType="numeric"
+                  style={[styles.inputWithStepper, { color: theme.text, borderColor: muted }]}
+                />
+                <View style={styles.stepperButtonsGroup}>
+                  <TouchableOpacity
+                    onPress={decrementHeight}
+                    style={[styles.smallStepperButton, { borderColor: muted }]}
+                  >
+                    <Text style={[styles.smallStepperButtonText, { color: theme.text }]}>-</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={incrementHeight}
+                    style={[styles.smallStepperButton, { borderColor: muted }]}
+                  >
+                    <Text style={[styles.smallStepperButtonText, { color: theme.text }]}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             ) : (
               <Text style={[styles.value, { color: theme.text }]}>{height ? `${height} cm` : "—"}</Text>
             )}
@@ -146,14 +170,33 @@ export default function ProfileTab() {
           <View style={styles.field}>
             <Text style={[styles.label, { color: muted }]}>Weight (kg)</Text>
             {isEditing ? (
-              <TextInput
-                value={weight}
-                onChangeText={setWeight}
-                placeholder="e.g., 70"
-                placeholderTextColor={muted}
-                keyboardType="numeric"
-                style={[styles.input, { color: theme.text, borderColor: muted }]}
-              />
+              <View style={styles.inputWithStepperContainer}>
+                <TextInput
+                  value={weight.toString()}
+                  onChangeText={(val) => {
+                    const num = parseFloat(val) || 0;
+                    if (num >= 30 && num <= 300) setWeight(num);
+                  }}
+                  placeholder="e.g., 70"
+                  placeholderTextColor={muted}
+                  keyboardType="decimal-pad"
+                  style={[styles.inputWithStepper, { color: theme.text, borderColor: muted }]}
+                />
+                <View style={styles.stepperButtonsGroup}>
+                  <TouchableOpacity
+                    onPress={decrementWeight}
+                    style={[styles.smallStepperButton, { borderColor: muted }]}
+                  >
+                    <Text style={[styles.smallStepperButtonText, { color: theme.text }]}>-</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={incrementWeight}
+                    style={[styles.smallStepperButton, { borderColor: muted }]}
+                  >
+                    <Text style={[styles.smallStepperButtonText, { color: theme.text }]}>+</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             ) : (
               <Text style={[styles.value, { color: theme.text }]}>{weight ? `${weight} kg` : "—"}</Text>
             )}
@@ -246,5 +289,62 @@ const styles = StyleSheet.create({
   logoutText: {
     fontWeight: "700",
     fontSize: 16,
+  },
+  inputWithStepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  inputWithStepper: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+  },
+  stepperButtonsGroup: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  smallStepperButton: {
+    width: 36,
+    height: 36,
+    borderWidth: 1.5,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  smallStepperButtonText: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  stepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  stepperButton: {
+    width: 40,
+    height: 40,
+    borderWidth: 1.5,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperButtonText: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  stepperValue: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  stepperValueText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
