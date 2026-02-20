@@ -55,7 +55,7 @@ export default function WorkoutSurvey({ onComplete, loading }: WorkoutSurveyProp
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
   const muted = theme.icon;
-  const cardBg = colorScheme === "dark" ? "#1f2123" : "#f6f8fa";
+  const cardBg = colorScheme === "dark" ? "#262733" : "#f6f8fa";
 
   const [answers, setAnswers] = useState<Partial<SurveyAnswers>>({});
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
@@ -117,6 +117,9 @@ export default function WorkoutSurvey({ onComplete, loading }: WorkoutSurveyProp
       {QUESTIONS.map((q, index) => (
         <View key={q.id}>
           <View style={[styles.questionCard, { backgroundColor: cardBg, borderColor: muted }]}>
+            <View style={styles.requiredBadge}>
+              <Text style={styles.requiredBadgeText}>*</Text>
+            </View>
             <Text style={[styles.questionNumber, { color: muted }]}>Question {index + 1}</Text>
             <Text style={[styles.questionText, { color: theme.text }]}>{q.question}</Text>
             
@@ -274,10 +277,28 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   questionCard: {
+    position: "relative",
     borderWidth: 1,
     borderRadius: 14,
     padding: 16,
     gap: 12,
+  },
+  requiredBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 20,
+    height: 20,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#E63946",
+  },
+  requiredBadgeText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "800",
+    lineHeight: 18,
   },
   questionNumber: {
     fontSize: 12,

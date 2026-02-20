@@ -4,6 +4,7 @@ import { Alert, Animated, FlatList, Modal, Platform, Pressable, StyleSheet, Text
 import Swipeable from "react-native-gesture-handler/Swipeable";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import SoftPageBackground from "@/components/SoftPageBackground";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import WorkoutPlanDisplay from "@/components/WorkoutPlanDisplay";
 import { Colors } from "@/constants/theme";
@@ -22,8 +23,9 @@ type WorkoutRow = {
 export default function HomeTab() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
+  const isDark = colorScheme === "dark";
   const mutedText = theme.icon;
-  const cardBackground = colorScheme === "dark" ? "#1f2123" : "#f6f8fa";
+  const cardBackground = colorScheme === "dark" ? "#262733" : "#f6f8fa";
   const insets = useSafeAreaInsets();
 
   const [workouts, setWorkouts] = useState<WorkoutRow[]>([]);
@@ -172,7 +174,8 @@ export default function HomeTab() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? "#1B1C22" : "#E9B07F", paddingTop: insets.top }]}>
+      <SoftPageBackground variant="home" />
       {loading ? (
         <Text style={[styles.sub, { color: mutedText }]}>Loading...</Text>
       ) : workouts.length === 0 ? (
@@ -195,7 +198,9 @@ export default function HomeTab() {
             
             return (
               <Swipeable
-                ref={(ref) => (swipeableRef = ref)}
+                ref={(ref) => {
+                  swipeableRef = ref;
+                }}
                 renderRightActions={renderRightActions(item)}
                 renderLeftActions={(progress, dragX) => {
                   const scale = dragX.interpolate({

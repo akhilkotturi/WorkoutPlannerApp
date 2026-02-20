@@ -3,14 +3,16 @@ import { useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import SoftPageBackground from "@/components/SoftPageBackground";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 export default function ProfileTab() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
+  const isDark = colorScheme === "dark";
   const muted = theme.icon;
-  const cardBg = colorScheme === "dark" ? "#1f2123" : "#f6f8fa";
+  const cardBg = colorScheme === "dark" ? "#262733" : "#f6f8fa";
   const logoutTextColor = colorScheme === "dark" ? theme.background : "#fff";
   const insets = useSafeAreaInsets();
 
@@ -73,7 +75,8 @@ export default function ProfileTab() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background, paddingTop: insets.top + 20 }]}>
+    <View style={[styles.container, { backgroundColor: isDark ? "#1B1C22" : "#E9B07F", paddingTop: insets.top + 20 }]}>
+      <SoftPageBackground variant="profile" />
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.text }]}>Profile</Text>

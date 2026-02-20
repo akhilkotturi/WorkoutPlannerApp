@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+import SoftPageBackground from "@/components/SoftPageBackground";
 import WorkoutPlanDisplay from "@/components/WorkoutPlanDisplay";
 import WorkoutSurvey, { SurveyAnswers } from "@/components/WorkoutSurvey";
 import { Colors } from "@/constants/theme";
@@ -11,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 export default function CreateTab() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
+  const isDark = colorScheme === "dark";
 
   const [loading, setLoading] = useState(false);
   const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
@@ -41,12 +43,13 @@ export default function CreateTab() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? "#2B211A" : "#E9B07F" }]}>
+      <SoftPageBackground variant="create" />
       {!workoutPlan ? (
         <WorkoutSurvey onComplete={handleSurveyComplete} loading={loading} />
       ) : (
-        <View style={{ flex: 1 }}>
-          <View style={[styles.header, { borderBottomColor: theme.icon }]}>
+        <View style={styles.contentContainer}>
+          <View style={[styles.header, { borderBottomColor: isDark ? "rgba(236, 237, 238, 0.24)" : "rgba(17, 24, 28, 0.18)" }]}>
             <Text style={[styles.headerTitle, { color: theme.text }]}>Your Plan</Text>
             <TouchableOpacity onPress={() => setWorkoutPlan(null)}>
               <Text style={[styles.newPlanButton, { color: theme.tint }]}>Create Another</Text>
@@ -60,20 +63,29 @@ export default function CreateTab() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+    overflow: "hidden",
+  },
+  contentContainer: {
+    flex: 1,
+    zIndex: 2,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 18,
     borderBottomWidth: 1,
+    zIndex: 3,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 30,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   newPlanButton: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });
