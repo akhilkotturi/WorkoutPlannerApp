@@ -3,6 +3,7 @@
 // Easy to switch: just change the imports and API client below
 // Supports: Groq, Gemini, OpenAI, or any other LLM
 
+// Originally used OpenAI, then switched to Gemini API, but using Groq due to some issues.
 import Groq from 'groq-sdk';
 
 const getApiKey = () => {

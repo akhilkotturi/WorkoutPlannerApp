@@ -6,7 +6,7 @@ import WorkoutPlanDisplay from "@/components/WorkoutPlanDisplay";
 import WorkoutSurvey, { SurveyAnswers } from "@/components/WorkoutSurvey";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { generateWorkoutPlan, WorkoutPlan } from "@/lib/gemini";
+import { generateWorkoutPlan, WorkoutPlan } from "@/lib/llm";
 import { supabase } from "@/lib/supabase";
 
 export default function CreateTab() {

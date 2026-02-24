@@ -7,7 +7,7 @@ import WorkoutPlanChat from "@/components/WorkoutPlanChat";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { WorkoutPlan } from "@/lib/gemini";
+import { WorkoutPlan } from "@/lib/llm";
 import { SurveyAnswers } from "@/components/WorkoutSurvey";
 
 interface WorkoutPlanDisplayProps {

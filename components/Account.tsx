@@ -1,7 +1,7 @@
 import { Colors } from '@/constants/theme'
 import { useColorScheme } from '@/hooks/use-color-scheme'
 import { Session } from '@supabase/supabase-js'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import { supabase } from '../lib/supabase'
 
@@ -13,11 +13,7 @@ export default function Account({ session }: { session: Session }) {
   const [website, setWebsite] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
 
-  useEffect(() => {
-    if (session) getProfile()
-  }, [session])
-
-  async function getProfile() {
+  const getProfile = useCallback(async () => {
     try {
       setLoading(true)
       if (!session?.user) throw new Error('No user on the session!')
@@ -43,7 +39,11 @@ export default function Account({ session }: { session: Session }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [session])
+
+  useEffect(() => {
+    if (session) getProfile()
+  }, [session, getProfile])
 
   async function updateProfile({
     username,

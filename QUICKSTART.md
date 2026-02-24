@@ -6,13 +6,13 @@ I've created a complete workout planner app with:
 
 ### ✅ Features Implemented
 1. **Survey System** - 5 multiple-choice questions about fitness preferences
-2. **Gemini AI Integration** - Generates personalized workout plans (FREE API)
+2. **LLM Integration** - Generates personalized workout plans (FREE API)
 3. **Beautiful UI** - Survey form and workout plan display with dark/light mode
 4. **Database Integration** - Saves workout plans to Supabase
 5. **Home Screen** - View all saved workouts, tap to view details, long-press to delete
 
 ### 📁 Files Created/Modified
-- `lib/gemini.ts` - Gemini API service
+- `lib/llm.ts` - LLM service layer
 - `components/WorkoutSurvey.tsx` - Survey UI component
 - `components/WorkoutPlanDisplay.tsx` - Displays generated workout plans
 - `app/(tabs)/create.tsx` - Updated to use survey + AI generation
@@ -22,17 +22,17 @@ I've created a complete workout planner app with:
 
 ## 🚀 Next Steps (DO THESE NOW)
 
-### Step 1: Get Gemini API Key (2 minutes)
-1. Go to https://makersuite.google.com/app/apikey
-2. Sign in with your Google account
-3. Click "Create API Key"
+### Step 1: Get Groq API Key (2 minutes)
+1. Go to https://console.groq.com/keys
+2. Sign in to your Groq account
+3. Create an API key
 4. Copy the key
 
 ### Step 2: Create .env File
 1. Copy `.env.example` to `.env`
-2. Add your Gemini API key:
+2. Add your LLM API key:
    ```
-   EXPO_PUBLIC_GEMINI_API_KEY=paste-your-key-here
+  EXPO_PUBLIC_GROQ_API_KEY=paste-your-key-here
    ```
 
 ### Step 3: Set Up Supabase Database
@@ -77,7 +77,7 @@ For each workout plan, you'll get:
 
 ## 🆓 Cost Breakdown
 
-- **Gemini API**: FREE (60 requests/min limit - plenty for personal use)
+- **LLM API (Groq)**: FREE tier available
 - **Supabase**: FREE tier (500MB database, 2GB bandwidth)
 
 ## 🔧 Troubleshooting
@@ -91,7 +91,7 @@ For each workout plan, you'll get:
 - Check Supabase dashboard → Table Editor → workouts
 
 **JSON parsing error?**
-- This is rare, Gemini is very reliable
+- This is rare; retry once if the provider returns a transient response error
 - Just try generating again
 
 ## 📱 What's Next? (Optional Enhancements)

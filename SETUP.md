@@ -1,21 +1,21 @@
 # Workout Planner App - Setup Guide
 
 ## Overview
-This app generates personalized weekly workout plans using AI (Google Gemini). Users answer a short survey and receive a custom workout plan based on their fitness level, goals, and preferences.
+This app generates personalized weekly workout plans using an LLM provider. Users answer a short survey and receive a custom workout plan based on their fitness level, goals, and preferences.
 
 ## Features
 - ✅ User authentication (sign in/sign out via Supabase)
 - ✅ Multiple choice survey (5 questions)
-- ✅ AI-powered workout plan generation (Gemini API - FREE tier)
+- ✅ AI-powered workout plan generation (LLM API)
 - ✅ Save and view workout plans
 - ✅ Dark/Light mode support
 
 ## Setup Instructions
 
-### 1. Get Gemini API Key (FREE)
-1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Sign in with your Google account
-3. Click "Create API Key"
+### 1. Get Groq API Key
+1. Go to [Groq Console](https://console.groq.com/keys)
+2. Sign in to your account
+3. Create an API key
 4. Copy the API key
 
 ### 2. Set Up Supabase Database
@@ -58,7 +58,7 @@ create policy "Users can delete their own workouts"
    ```
    EXPO_PUBLIC_SUPABASE_URL=your-supabase-url
    EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-   EXPO_PUBLIC_GEMINI_API_KEY=your-gemini-api-key
+  EXPO_PUBLIC_GROQ_API_KEY=your-groq-api-key
    ```
 
 ### 4. Install Dependencies & Run
@@ -78,8 +78,8 @@ npx expo start
 
 ### AI Workflow
 1. User completes survey
-2. Answers are sent to Gemini API with a structured prompt
-3. Gemini generates a JSON workout plan with:
+2. Answers are sent to the configured LLM API with a structured prompt
+3. The model generates a JSON workout plan with:
    - Title and description
    - Weekly schedule (as many days as requested)
    - Exercises with sets, reps, and rest times
@@ -110,18 +110,17 @@ npx expo start
 ```
 
 ## Free Tier Limits
-- **Gemini API**: 60 requests per minute (very generous for personal use)
+- **LLM API (Groq)**: Free tier available (check provider limits)
 - **Supabase**: 500MB database, 2GB bandwidth (free tier)
 
 ## Troubleshooting
 
-### "EXPO_PUBLIC_GEMINI_API_KEY is not set"
+### "EXPO_PUBLIC_GROQ_API_KEY is not set"
 Make sure you created a `.env` file (not `.env.example`) with your actual API key.
 
 ### API Key Not Working
-- Verify the key is correct on [Google AI Studio](https://makersuite.google.com/app/apikey)
-- Make sure you're using `gemini-1.5-flash` model (free tier)
-- Check for any API restrictions or quotas
+- Verify the key is correct in [Groq Console](https://console.groq.com/keys)
+- Check for any API restrictions or quota limits on your account
 
 ### Supabase Connection Issues
 - Verify your Supabase URL and anon key

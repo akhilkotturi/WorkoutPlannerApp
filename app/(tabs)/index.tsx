@@ -9,7 +9,7 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import WorkoutPlanDisplay from "@/components/WorkoutPlanDisplay";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { WorkoutPlan } from "@/lib/gemini";
+import { WorkoutPlan } from "@/lib/llm";
 import { supabase } from "@/lib/supabase";
 
 type WorkoutRow = {
@@ -127,50 +127,31 @@ export default function HomeTab() {
     }
   };
 
-  const renderRightActions = (item: WorkoutRow) => (
-    progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>
-  ) => {
-    const scale = dragX.interpolate({
-      inputRange: [-100, 0],
-      outputRange: [1, 0],
-      extrapolate: 'clamp',
-    });
+  const renderRightActions = (item: WorkoutRow) => {
+    function RightActions(
+      progress: Animated.AnimatedInterpolation<number>,
+      dragX: Animated.AnimatedInterpolation<number>
+    ) {
+      const scale = dragX.interpolate({
+        inputRange: [-100, 0],
+        outputRange: [1, 0],
+        extrapolate: 'clamp',
+      });
 
-    return (
-      <Animated.View style={[styles.deleteAction, { transform: [{ scale }] }]}>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDeleteWorkout(item.id)}
-        >
-          <IconSymbol name="trash" size={24} color="#fff" />
-          <Text style={styles.actionText}>Delete</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  };
+      return (
+        <Animated.View style={[styles.deleteAction, { transform: [{ scale }] }]}>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => handleDeleteWorkout(item.id)}
+          >
+            <IconSymbol name="trash" size={24} color="#fff" />
+            <Text style={styles.actionText}>Delete</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      );
+    }
 
-  const renderLeftActions = (item: WorkoutRow) => (
-    progress: Animated.AnimatedInterpolation<number>,
-    dragX: Animated.AnimatedInterpolation<number>
-  ) => {
-    const scale = dragX.interpolate({
-      inputRange: [0, 100],
-      outputRange: [0, 1],
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <Animated.View style={[styles.starAction, { transform: [{ scale }] }]}>
-        <TouchableOpacity
-          style={styles.starButton}
-          onPress={() => handleToggleStar(item.id, item.is_starred || false)}
-        >
-          <IconSymbol name={item.is_starred ? "star.fill" : "star"} size={24} color="#fff" />
-          <Text style={styles.actionText}>{item.is_starred ? "Unstar" : "Star"}</Text>
-        </TouchableOpacity>
-      </Animated.View>
-    );
+    return RightActions;
   };
 
   return (

@@ -3,7 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View 
 
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
-import { askWorkoutQuestion, WorkoutChatMessage, WorkoutPlan } from "@/lib/gemini";
+import { askWorkoutQuestion, WorkoutChatMessage, WorkoutPlan } from "@/lib/llm";
 import { SurveyAnswers } from "@/components/WorkoutSurvey";
 
 interface WorkoutPlanChatProps {
