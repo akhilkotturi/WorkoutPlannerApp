@@ -3,13 +3,16 @@ import * as LegacyFileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { Alert, Platform, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+import WorkoutPlanChat from "@/components/WorkoutPlanChat";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { WorkoutPlan } from "@/lib/gemini";
+import { SurveyAnswers } from "@/components/WorkoutSurvey";
 
 interface WorkoutPlanDisplayProps {
   plan: WorkoutPlan;
+  answers?: SurveyAnswers;
 }
 
 const toWorkoutPlanText = (plan: WorkoutPlan) => {
@@ -85,7 +88,7 @@ const writeShareFile = async (fileName: string, content: string) => {
   return null;
 };
 
-export default function WorkoutPlanDisplay({ plan }: WorkoutPlanDisplayProps) {
+export default function WorkoutPlanDisplay({ plan, answers }: WorkoutPlanDisplayProps) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? "light"];
   const isDark = colorScheme === "dark";
@@ -209,6 +212,8 @@ export default function WorkoutPlanDisplay({ plan }: WorkoutPlanDisplayProps) {
           </View>
         ))}
       </View>
+
+      {answers && <WorkoutPlanChat plan={plan} answers={answers} />}
     </ScrollView>
   );
 }

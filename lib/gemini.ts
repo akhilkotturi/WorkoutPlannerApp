@@ -53,6 +53,11 @@ export interface Exercise {
   rest?: string;
 }
 
+export interface WorkoutChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 // Temporary mock function for testing while we debug the API
 function generateMockWorkoutPlan(answers: SurveyAnswers): WorkoutPlan {
   const days = parseInt(answers.daysPerWeek.split(' ')[0]);
@@ -114,7 +119,6 @@ Generate a comprehensive workout plan in JSON format with this exact structure:
     }
   ]
 }
-
 Include ${answers.daysPerWeek} workout days. Make exercises specific to the equipment available and appropriate for the fitness level. Include warm-up suggestions in notes where relevant. Return ONLY valid JSON, no markdown formatting.`;
 
     const completion = await client.chat.completions.create({
@@ -147,5 +151,73 @@ Include ${answers.daysPerWeek} workout days. Make exercises specific to the equi
     console.error('AI API error:', error);
     console.warn('⚠️ Using temporary mock workout plan due to API error');
     return generateMockWorkoutPlan(answers);
+  }
+}
+
+export async function askWorkoutQuestion(params: {
+  plan: WorkoutPlan;
+  answers: SurveyAnswers;
+  question: string;
+  history?: WorkoutChatMessage[];
+}): Promise<string> {
+  const { plan, answers, question, history = [] } = params;
+
+  try {
+    const client = getAIClient();
+
+    const profileContext = [
+      `Fitness Level: ${answers.fitnessLevel}`,
+      `Primary Goal: ${answers.goal}`,
+      `Days Per Week: ${answers.daysPerWeek}`,
+      `Equipment: ${answers.equipment}`,
+      `Session Duration: ${answers.duration}`,
+    ].join("\n");
+
+    const latestHistory = history.slice(-8);
+
+    const systemPrompt = `You are a dedicated workout coach for one specific user.
+
+Your job:
+- Answer questions ONLY using the user's workout plan and profile context.
+- Be highly personalized: reference specific days, exercises, sets/reps/rest, and progression ideas from the given plan.
+- Keep answers practical and concise (2-5 short paragraphs or bullet points).
+- If asked for substitutions, keep the same training intent and equipment constraints.
+- If nutrition/medical/injury advice is requested beyond scope, provide safe general guidance and recommend a professional when needed.
+
+Never invent details that conflict with the plan.`;
+
+    const userPrompt = [
+      "USER PROFILE:",
+      profileContext,
+      "",
+      "WORKOUT PLAN JSON:",
+      JSON.stringify(plan),
+      "",
+      "USER QUESTION:",
+      question,
+      "",
+      "Respond as their personal coach and base your answer on this exact plan.",
+    ].join("\n");
+
+    const completion = await client.chat.completions.create({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...latestHistory.map((message) => ({ role: message.role, content: message.content })),
+        { role: 'user', content: userPrompt },
+      ],
+      model: 'llama-3.3-70b-versatile',
+      temperature: 0.4,
+      max_tokens: 800,
+    });
+
+    const response = completion.choices[0]?.message?.content?.trim();
+    if (!response) {
+      throw new Error('No response from AI');
+    }
+
+    return response;
+  } catch (error) {
+    console.error('Workout chat error:', error);
+    return `I can still help based on your plan. Since your goal is ${answers.goal.toLowerCase()} and you're training ${answers.daysPerWeek.toLowerCase()}, focus on progressive overload week to week and keep exercise form strict. Ask me something specific like "How should I progress Day 2?" or "What can I swap for squats with my equipment?".`;
   }
 }

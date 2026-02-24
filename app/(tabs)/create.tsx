@@ -16,6 +16,7 @@ export default function CreateTab() {
 
   const [loading, setLoading] = useState(false);
   const [workoutPlan, setWorkoutPlan] = useState<WorkoutPlan | null>(null);
+  const [latestAnswers, setLatestAnswers] = useState<SurveyAnswers | null>(null);
 
   const handleSurveyComplete = async (answers: SurveyAnswers) => {
     setLoading(true);
@@ -23,6 +24,7 @@ export default function CreateTab() {
       // Generate workout plan using Gemini
       const plan = await generateWorkoutPlan(answers);
       setWorkoutPlan(plan);
+      setLatestAnswers(answers);
 
       // Optional: Save to Supabase for future reference
       const { data: { session } } = await supabase.auth.getSession();
@@ -51,11 +53,16 @@ export default function CreateTab() {
         <View style={styles.contentContainer}>
           <View style={[styles.header, { borderBottomColor: isDark ? "rgba(236, 237, 238, 0.24)" : "rgba(17, 24, 28, 0.18)" }]}>
             <Text style={[styles.headerTitle, { color: theme.text }]}>Your Plan</Text>
-            <TouchableOpacity onPress={() => setWorkoutPlan(null)}>
+            <TouchableOpacity
+              onPress={() => {
+                setWorkoutPlan(null);
+                setLatestAnswers(null);
+              }}
+            >
               <Text style={[styles.newPlanButton, { color: theme.tint }]}>Create Another</Text>
             </TouchableOpacity>
           </View>
-          <WorkoutPlanDisplay plan={workoutPlan} />
+          <WorkoutPlanDisplay plan={workoutPlan} answers={latestAnswers ?? undefined} />
         </View>
       )}
     </SafeAreaView>
